@@ -42,8 +42,3 @@ Add additional notes about how to deploy this on a live system.
 ## Built With
 * [Streamlit](https://www.streamlit.io/) - Python framework used.
 * [Python](https://www.python.org/) - Programming language used.
-
-## Authors
-* **Minh Pham**
-
-```
