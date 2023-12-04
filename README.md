@@ -10,8 +10,6 @@ This project aims to create a dynamic Airbnb web app that uses archived data fro
     - [Installing](#installing)
 3. [Deployment](#deployment)
 4. [Built With](#built-with)
-5. [Versioning](#versioning)
-6. [Authors](#authors)
 
 ## Project Introduction
 This project provides an interface to access and interact with pre-COVID Airbnb data. The application includes functionalities such as data visualization charting, quick statistics computation, location-based filtering, and more. 
