@@ -35,73 +35,64 @@ def get_data():
     return pd.read_csv(url)
 df = get_data()
 
-st.header('AireBnB Data NYC (2019-09-12)')
+st.title("Welcome to Minh Pham's Final Project for CIS-102!")
 st.dataframe(df.head(10))
 
-st.subheader('Selecting a subset of columns')
+st.markdown("""### Select boroughs from the corresponding neighborhoods""")
+boroughs = df['neighbourhood_group'].unique().tolist()
+selected_borough = st.selectbox("New York Boroughs", boroughs, 0)
 
-st.markdown("Streamlit has a [multiselect widget](https://streamlit.io/docs/api.html#streamlit.multiselect) that allows selecting or removing from a list of items. This lets us build a column selector widget for a dataframe.")
+neighbourhoods = df[df['neighbourhood_group']==selected_borough]['neighbourhood'].unique().tolist()
 
-cols = ["name", "host_name", "neighbourhood", "room_type", "price"]
-st_ms = st.multiselect("Columns", df.columns.tolist(), default=cols)
+selected_neighborhoods = st.multiselect("Neighborhood", neighbourhoods, default=neighbourhoods[0])
 
-st.dataframe(df[st_ms].head(10))
+# st.dataframe(df[st_ms].head(10))
+
+st.markdown("""### Price range slider.""")
+
+prices = st.slider("Price range", float(df.price.min()), 1000., (50., 300.))
+st.markdown(f"The price range is between \${prices[0]} and \${prices[1]}")
+
+total = df[ 
+    (df['neighbourhood_group']==selected_borough)
+    & (df['neighbourhood'].isin(selected_neighborhoods))
+    & (df['price'].between(prices[0], prices[1]))
+    ]
+st.markdown(f' Total {len(total)} housing rental are found in ${", ".join(selected_neighborhoods)}$ in {selected_borough} with price between \${prices[0]} and \${prices[1]}')
+st.write(total)
+
+
+
 
 st.write("---")
 
-st.markdown("""### Sidebar and price range slider
-
-We use `st.slider` to provide a slider that allows selecting a custom range for the histogram. We tuck it away into a [sidebar](https://streamlit.io/docs/api.html#add-widgets-to-sidebar).""")
-
-values = st.sidebar.slider("Price range", float(df.price.min()), 1000., (50., 300.))
-f = px.histogram(df.query(f"price.between{values}", engine="python"),
-                 x="price", nbins=15, title="Price distribution")
-f.update_xaxes(title="Price")
-f.update_yaxes(title="No. of listings")
-st.plotly_chart(f)
-
-st.write("---")
-
-st.header("Where are the most expensive properties located?")
-st.subheader("On a map")
-st.markdown("The following map shows the top 1% most expensive Airbnbs priced at $800 and above.")
+st.header("Map Display")
 
 # Get "latitude", "longitude", "price" for top listings
-toplistings = df.query("price>=800")[["name", "latitude", "longitude", "price"]].dropna(how="any").sort_values("price", ascending=False)
 
-Top = toplistings.values[0,:]
-m = folium.Map(location=Top[1:-1], zoom_start=16)
-
-tooltip = "Top listings"
-for j in range(50):
-    name, lat, lon, price = toplistings.values[j,:]
+zoom_level = zoom_level = max(10, 14 - len(selected_neighborhoods))
+init_lat = 40.7128
+init_lon = -74.0060
+if len(total) != 0:
+    first_el = total.loc[0]
+    init_lat = first_el['latitude']
+    init_lon = first_el['longitude']
+m = folium.Map(location=[init_lat, init_lon], zoom_start=zoom_level)
+for i in total.index:
+    name, price, host_name, room_type = total['name'][i], total['price'][i], total['host_name'][i], total['room_type'][i]
+    iframe_content = (
+        f"Name: {name}<br>"
+        f"Host Name: {host_name}<br>"
+        f"Room Type: {room_type}<br>"
+        f"Price: ${price}"
+    )
+    iframe = folium.IFrame(iframe_content, width=200, height=150)
+    popup = folium.Popup(iframe, min_width=200, max_width=200)
     folium.Marker(
-            (lat,lon), popup=f"{name}" , tooltip=f"Price:{price}"
+            location=[total['latitude'][i], total['longitude'][i]], 
+            popup=popup,
+            tooltip=f"${price}"
         ).add_to(m)
 
 # call to render Folium map in Streamlit
 folium_static(m)
-
-
-st.write("---")
-
-st.markdown("""### Images and dropdowns
-
-Use [st.image](https://streamlit.io/docs/api.html#streamlit.image) to show images of cats, puppies, feature importance plots, tagged video frames, and so on.
-
-Now for a bit of fun.""")
-
-pics = {
-    "Cat": "https://cdn.pixabay.com/photo/2016/09/24/22/20/cat-1692702_960_720.jpg",
-    "Puppy": "https://cdn.pixabay.com/photo/2019/03/15/19/19/puppy-4057786_960_720.jpg",
-    "Sci-fi city": "https://storage.needpix.com/rsynced_images/science-fiction-2971848_1280.jpg",
-    "Cheetah": "img/running-cheetah.jpeg",
-    "FT-Logo": "ft-logo.png"
-}
-pic = st.selectbox("Picture choices", list(pics.keys()), 0)
-st.image(pics[pic], use_column_width=True, caption=pics[pic])
-
-st.write("---")
-
-select_col = st.selectbox("Select Columns", list(df.columns), 0)
-st.write(f"Your selection is {select_col}")
