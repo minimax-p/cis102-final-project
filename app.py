@@ -74,8 +74,9 @@ zoom_level = zoom_level = max(10, 14 - len(selected_neighborhoods))
 init_lat = 40.7128
 init_lon = -74.0060
 if len(total) != 0:
-    init_lat = total['latitude'][0]
-    init_lon = total['longitude'][0]
+    first_el = total.loc[total.index[0]]
+    init_lat = first_el['latitude']
+    init_lon = first_el['longitude']
 m = folium.Map(location=[init_lat, init_lon], zoom_start=zoom_level)
 for i in total.index:
     name, price, host_name, room_type = total['name'][i], total['price'][i], total['host_name'][i], total['room_type'][i]
