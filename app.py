@@ -21,10 +21,10 @@ from streamlit_folium import folium_static
 ######################
 
 # PIL.Image
-image = Image.open('ft-logo.png')
+image = Image.open('mosaic-logo.png')
 
 #https://docs.streamlit.io/library/api-reference/media/st.image
-st.image(image, use_column_width=False)
+st.image(image, use_column_width=False, width=400)
 
 
 
@@ -35,10 +35,15 @@ def get_data():
     return pd.read_csv(url)
 df = get_data()
 
-st.title("Welcome to Minh Pham's Final Project for CIS-102!")
+st.title("Welcome to Mosaic Penthouse!")
+st.markdown("""Mosaic Penthouses is a better way to book your stay in New York City. 
+            Created in 2023 by Minh Pham as his final project for the class CIS-102,
+            Mosaic Penthouses connects the people of need to the right homestay in New York City!""")
+st.markdown("""### Learn about your options TODAY!""")
+st.markdown("Here are some examples to get you started:")
 st.dataframe(df.head(10))
 
-st.markdown("""### Select boroughs from the corresponding neighborhoods""")
+st.markdown("""### Choose a location to start""")
 boroughs = df['neighbourhood_group'].unique().tolist()
 selected_borough = st.selectbox("New York Boroughs", boroughs, 0)
 
@@ -48,8 +53,7 @@ selected_neighborhoods = st.multiselect("Neighborhood", neighbourhoods, default=
 
 # st.dataframe(df[st_ms].head(10))
 
-st.markdown("""### Price range slider.""")
-
+st.markdown("""### Choose your price range""")
 prices = st.slider("Price range", float(df.price.min()), 1000., (50., 300.))
 st.markdown(f"The price range is between \${prices[0]} and \${prices[1]}")
 
@@ -59,15 +63,9 @@ total = df[
     & (df['price'].between(prices[0], prices[1]))
     ]
 st.markdown(f' Total {len(total)} housing rental are found in ${", ".join(selected_neighborhoods)}$ in {selected_borough} with price between \${prices[0]} and \${prices[1]}')
-st.write(total)
 
-
-
-
-st.write("---")
-
-st.header("Map Display")
-
+st.markdown("""### Map display""")
+st.markdown("Click on the blue placemarks to learn more about each option")
 # Get "latitude", "longitude", "price" for top listings
 
 zoom_level = zoom_level = max(10, 14 - len(selected_neighborhoods))
@@ -81,10 +79,12 @@ m = folium.Map(location=[init_lat, init_lon], zoom_start=zoom_level)
 for i in total.index:
     name, price, host_name, room_type = total['name'][i], total['price'][i], total['host_name'][i], total['room_type'][i]
     iframe_content = (
-        f"Name: {name}<br>"
-        f"Host Name: {host_name}<br>"
-        f"Room Type: {room_type}<br>"
-        f"Price: ${price}"
+        f"""<div style='font-family: "Poppins"; font-size: 0.8rem'>
+        {name}<br><br>
+        Host Name: <strong>{host_name}</strong><br>
+        Room Type: <strong>{room_type}</strong><br>
+        Price: ${price}
+        </div>"""
     )
     iframe = folium.IFrame(iframe_content, width=200, height=150)
     popup = folium.Popup(iframe, min_width=200, max_width=200)
